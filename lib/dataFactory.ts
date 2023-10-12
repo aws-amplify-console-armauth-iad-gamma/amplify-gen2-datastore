@@ -187,7 +187,7 @@ class DataGenerator implements ConstructContainerEntryGenerator {
     const inlineApiPolicy = new Policy(scope, 'AmplifyCMSManageRolePolicy');
     inlineApiPolicy.addStatements(new PolicyStatement({
       effect: Effect.ALLOW,
-      resources: [api.resources.graphqlApi.arn],
+      resources: [`${api.resources.graphqlApi.arn}/*`],
       actions: ['appsync:GraphQL']
     }));
     cmsManageRole.attachInlinePolicy(inlineApiPolicy);
