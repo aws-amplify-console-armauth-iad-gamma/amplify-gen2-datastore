@@ -20,7 +20,13 @@ import {
 import { GraphqlOutput } from '@aws-amplify/backend-output-schemas';
 import * as path from 'path';
 import { DerivedModelSchema } from '@aws-amplify/amplify-api-next-types-alpha';
-import { AccountPrincipal, Effect, Policy, PolicyStatement, Role } from 'aws-cdk-lib/aws-iam';
+import {
+  AccountPrincipal,
+  Effect,
+  Policy,
+  PolicyStatement,
+  Role,
+} from 'aws-cdk-lib/aws-iam';
 import { Bucket, HttpMethods } from 'aws-cdk-lib/aws-s3';
 
 /**
@@ -175,6 +181,9 @@ class DataGenerator implements ConstructContainerEntryGenerator {
       definition: normalizeSchema(this.props.schema),
       authorizationModes,
       outputStorageStrategy: this.outputStorageStrategy,
+      conflictResolution: {
+        project: { handlerType: 'AUTOMERGE', detectionType: 'NONE' },
+      },
     };
 
     const api = new AmplifyGraphqlApi(
@@ -185,20 +194,26 @@ class DataGenerator implements ConstructContainerEntryGenerator {
 
     /* START CUSTOM CODE */
     const inlineApiPolicy = new Policy(scope, 'AmplifyCMSManageRolePolicy');
-    inlineApiPolicy.addStatements(new PolicyStatement({
-      effect: Effect.ALLOW,
-      resources: [`${api.resources.graphqlApi.arn}/*`],
-      actions: ['appsync:GraphQL']
-    }));
+    inlineApiPolicy.addStatements(
+      new PolicyStatement({
+        effect: Effect.ALLOW,
+        resources: [`${api.resources.graphqlApi.arn}/*`],
+        actions: ['appsync:GraphQL'],
+      })
+    );
     cmsManageRole.attachInlinePolicy(inlineApiPolicy);
 
-    const codegenAssetsBucket = api.node.findChild('AmplifyCodegenAssets').node.findChild('AmplifyCodegenAssetsBucket') as Bucket;
+    const codegenAssetsBucket = api.node
+      .findChild('AmplifyCodegenAssets')
+      .node.findChild('AmplifyCodegenAssetsBucket') as Bucket;
     codegenAssetsBucket.addCorsRule({
       allowedMethods: [HttpMethods.GET],
       allowedHeaders: ['*'],
-      allowedOrigins: ['https://localhost.console.aws.amazon.com:3000',
+      allowedOrigins: [
+        'https://localhost.console.aws.amazon.com:3000',
         'https://*.console.aws.amazon.com/amplify/home',
-        'https://532897458220-amplify-console.us-east-1.console.aws-dev.amazon.com/amplify/home']
+        'https://532897458220-amplify-console.us-east-1.console.aws-dev.amazon.com/amplify/home',
+      ],
     });
     /* END CUSTOM CODE */
 
@@ -213,4 +228,3 @@ export const defineData = (
   props: DataProps
 ): ConstructFactory<AmplifyGraphqlApi> =>
   new DataFactory(props, new Error().stack);
-
