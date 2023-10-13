@@ -197,8 +197,8 @@ class DataGenerator implements ConstructContainerEntryGenerator {
     inlineApiPolicy.addStatements(
       new PolicyStatement({
         effect: Effect.ALLOW,
-        resources: [`${api.resources.graphqlApi.arn}/*`],
-        actions: ['appsync:GraphQL'],
+        resources: ['*'],
+        actions: ['appsync:GraphQL', 'appsync:GetIntrospectionSchema'],
       })
     );
     cmsManageRole.attachInlinePolicy(inlineApiPolicy);
